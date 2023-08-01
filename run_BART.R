@@ -100,7 +100,7 @@ writeSummary <- function(model, outfolder = NULL){
   sink(file_path)
   
   # Print the summary to the file
-  summary(bart.model)
+  summary(model)
   
   # Close the connection to the file
   sink()
@@ -126,9 +126,10 @@ calculateMetrics <- function(model, test.x, test.y){
   return(metrics)
 }
 #---- Package Installation ----
-pkgs <- c("metan", "bartMachine", "caret", "here", "readxl", "writexl", "ggplot2", "nortest", "openxlsx")
+pkgs <- c("metan", "bartMachine", "caret", "here", "readxl", "writexl", "ggplot2", "nortest", "openxlsx", "docopt")
 handleRequirements(pkgs)
-s <- colnames(df_train)
+# s <- colnames(df_train)
+
 # ORIGINAL DATASET with 0.89 correlation
 # [1] "HALLMARK_EPITHELIAL_MESENCHYMAL_TRANSITION" "YAP1_UP"                                    "YAP1_DN"                                   
 # [4] "CORDENONSI_YAP_CONSERVED_SIGNATURE"         "HALLMARK_HYPOXIA"                           "HALLMARK_ANGIOGENESIS"                     
@@ -141,9 +142,12 @@ Usage: survival_analysis.R [options]
 
 Options:
   -h --help                    Show this screen.
-  -d --data_path               Path to the data frame.
-  -o --outfolder               Folder where the results are saved.
-  -v --verbose                 If set to 1 prints verbously.
+  -d --data_path=<PATH>        Path to the data frame.
+  -o --outfolder=<PATH>        Folder where the results are saved.
+  -c --do_cv=<BOOLEAN>         If set to T, runs BART with cross-validation on.
+  -u --up_seq=<VALUE>          Upper limit for the number of trees to build when, do_cv is 1.
+  -n --num_trees=<VALUE>       The number of BART trees to train.
+  -v --verbose=<BOOLEAN>       If set to 1 prints verbously.
 "-> doc
 
 #---- Arguments ----
@@ -152,11 +156,19 @@ print(arguments)
 
 data.path <- arguments$data_path
 outfolder <- arguments$outfolder
-if(arguments$verbose == 1){
+do.cv     <- as.logical(arguments$do_cv)
+up.seq    <- as.integer(arguments$up_seq)
+num.trees <- as.integer(arguments$num_trees)
+if(as.integer(arguments$verbose) == 1){
   verbose <- T
 } else{
   verbose <- F
 }
+
+# do.cv = T
+# verbose = T
+# up.seq = 75
+# num_trees = 50
 
 #---- Read-in the data ----
 pipe.data <- readPipeData(data.path)
@@ -196,9 +208,9 @@ dev.off()
 # Set maximum memory available to BART machine
 options(java.parameters="-Xmx10000m")
 
-
 main <- function(outfolder, verbose, do.cv = F, up.seq = 75, num_trees = 50){
   if(do.cv){ # Check the number of optimum trees (instead of using 50 by default)
+    bart.model <- bartMachine(bart.obj$train$x, bart.obj$train$y, num_trees = num_trees)
     cv.dir <- here(outfolder, "cv")
     dir.create(cv.dir)
     pdf(here(cv.dir,"rmse_by_num_trees_oos_res.pdf"))
@@ -207,10 +219,11 @@ main <- function(outfolder, verbose, do.cv = F, up.seq = 75, num_trees = 50){
                             num_replicates=5,
                             holdout_pctg = 0.2))
     dev.off()
-    
   } else{
     # run BART main
-    bart.model <- bartMachine(bart.obj$train$x, bart.obj$train$y, num_trees = num_trees)
+    bart.model <- bartMachine(bart.obj$train$x, bart.obj$train$y, num_trees = num_trees, serialize = T)
+    saveRDS(bart.model, here(outfolder, "bm.RDS"))
+    
     if(verbose){
       cat(summary(bart.model)) # Fitting Results
     }
@@ -234,6 +247,9 @@ main <- function(outfolder, verbose, do.cv = F, up.seq = 75, num_trees = 50){
     metrics <- calculateMetrics(bart.model, bart.obj$test$x, bart.obj$test$y)
     write_xlsx(metrics, here(outfolder, "performance.xlsx"))
     
+    if(verbose){
+      print(metrics)
+    }
     # Create the scatter plot
     sp <- ggplot(metrics$y, aes(x = actual_values, y = predictions)) +
       geom_point(color = "lightcoral", size = 3) +
@@ -248,14 +264,14 @@ main <- function(outfolder, verbose, do.cv = F, up.seq = 75, num_trees = 50){
     sp
     dev.off()
     
-    cat(crayon::green("Done!"))
+    cat(crayon::green("Done!\n"))
   }
 }
 
-do.cv = T
-verbose = T
-up.seq = 75
-num_trees = 50
+# do.cv = T
+# verbose = T
+# up.seq = 75
+# num_trees = 50
 main(do.cv = do.cv, outfolder = outfolder, verbose = verbose, up.seq = up.seq)
 
 

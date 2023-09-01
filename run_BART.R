@@ -138,7 +138,7 @@ handleRequirements(pkgs)
 #---- Header ----
 "Mesothelioma AI Pipeline - Bayesian Additive Regression Trees
 
-Usage: survival_analysis.R [options]
+Usage: run_BART.rR [options]
 
 Options:
   -h --help                    Show this screen.
@@ -173,9 +173,6 @@ if(as.integer(arguments$verbose) == 1){
 #---- Read-in the data ----
 pipe.data <- readPipeData(data.path)
 outfolder <- here(outfolder, "BART_results", getFileName(data.path))
-# data.path <- "/home/jan1/Documents/Cancer_Studies_PhD/Deciphering_Oncogenes/Workflow/curated_datasets/medusa150/M150_EMT_CON_DF.CSV"
-# pipe.data <- readPipeData(data.path)
-# outfolder <- here("/home/jan1/Documents/Cancer_Studies_PhD/Deciphering_Oncogenes/Workflow/BART", "BART_results", getFileName(data.path))
 dir.create(outfolder, recursive = T)
 # set.seed(42)
 
@@ -268,40 +265,6 @@ main <- function(outfolder, verbose, do.cv = F, up.seq = 75, num_trees = 50){
   }
 }
 
-# do.cv = T
-# verbose = T
-# up.seq = 75
-# num_trees = 50
 main(do.cv = do.cv, outfolder = outfolder, verbose = verbose, up.seq = up.seq)
 
-
-# library(xgboost)
-# library(caret)
-# 
-# set.seed(123)  # For reproducibility
-# # trainIndex <- createDataPartition(data$y, p = 0.7, list = FALSE)
-# # trainData <- data[trainIndex, ]
-# # testData <- data[-trainIndex, ]
-# 
-# 
-# xgb_model <- xgboost(data = as.matrix(df_train), 
-#                      label = y_train, 
-#                      objective = "reg:squarederror",
-#                      nrounds = 100, 
-#                      eta = 0.1,
-#                      max_depth = 3)
-# 
-# predictions <- predict(xgb_model, as.matrix(df_test))
-# 
-# rmse <- sqrt(mean((y_test - predictions)^2))
-# mae <- mean(abs(y_test$y - predictions))
-# r_squared <- cor(y_test$y, predictions)^2
-# shapiro.test(y_test)
-# shapiro.test(predictions)
-# 
-# cor.test(y_test, predictions)
-# 
-# print(paste("RMSE:", rmse))
-# print(paste("MAE:", mae))
-# print(paste("R-squared:", r_squared))
 

@@ -164,7 +164,11 @@ if(as.integer(arguments$verbose) == 1){
 } else{
   verbose <- F
 }
-
+if(do.cv){
+  verbose <- T
+} else{
+  verbose <- F
+}
 # do.cv = T
 # verbose = T
 # up.seq = 75

@@ -125,8 +125,9 @@ calculateMetrics <- function(model, test.x, test.y){
   metrics <- lapply(metrics, as.data.frame)
   return(metrics)
 }
+
 #---- Package Installation ----
-pkgs <- c("metan", "bartMachine", "caret", "here", "readxl", "writexl", "ggplot2", "nortest", "openxlsx", "docopt")
+pkgs <- c("metan", "bartMachine", "caret", "here", "readxl", "writexl", "ggplot2", "nortest", "openxlsx", "docopt", "ggprism")
 handleRequirements(pkgs)
 # s <- colnames(df_train)
 
@@ -192,6 +193,7 @@ p <- ggplot(pipe.data, aes(x = .data[[colnames(pipe.data)[2]]])) +
   labs(title = "Distribution of the Training Label", x = "Response", y = "Frequency",
        subtitle = paste0("SW test: ", nor.test$sw.test[1], "\n",
                          "AD test: ", nor.test$ad.test[1]))
+p <- p + theme_prism()
 
 pdf(here(outfolder, "label_histogram.pdf"))
 print(p)
